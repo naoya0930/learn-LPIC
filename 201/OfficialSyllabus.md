@@ -1,0 +1,53 @@
+### トピック201 キャパシティプランニング
+- 以下を測定する
+  - CPU使用率
+  - メモリ使用率
+  - ディスクI/O
+  - ネットワークI/O
+- firewallとルーティングのスループット
+- クライアントの帯域幅の使用状況
+- システム診断と問題の照合
+- ネットワークを含むシステムのスループットを推定する
+#### 主要なコマンド一覧
+- iostat
+- iotop
+- vmstat
+- netstat
+- ss
+- iptraf
+- pstree
+- ps
+- w
+- lsof
+- top
+- htop
+- uptime
+- sar
+- swap
+- processes blocked on I/O
+- blocks in
+- blocks out
+
+#### コマンド分類
+- プロセス管理・状態監視
+  - 実行中のプロセス、ユーザ、システムの稼働状況を把握
+  - ps, pstree, top, htop, uptime
+- I/O・ディスク監視
+  - ディスクI/Oの活動状況を把握
+  - ボトルネックを特定する
+  - iostat, iotop, vmstat
+- メモリ・仮想化監視
+  - メモリ、スワップ、ページングの状態を把握
+  - vmstat, swap
+- ネットワーク監視
+  - ネットワーク接続、トラフィック、ソケットの状態を把握
+  - netstat, ss, iptraf
+- ファイル・リソース管理
+  - 開かれているファイルやソケットからプロセスを特定
+  - lsof
+- 履歴・統計情報
+  - 過去のシステム活動の統計情報を記録、分析
+  - sar
+- 特殊な状態の監視
+  - 特定のボトルネックや異常な状態のプロセスを特定
+  - ps, top htopで「processes blocked 」を探す
