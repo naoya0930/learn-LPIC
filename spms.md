@@ -265,7 +265,286 @@
   - kernel /boot/vmlinuz-version root=LABEL=/ dev_name=sda1
   - initrd /boot/initrd-version.img
 ### grub2
-- `/boot/grub/grub.cfg`
+
+- 設定ファイル`/boot/grub/grub.cfg`
+- 記入例：
+  - set root=(hd0,1)
+  - linux /vmlinuz root=/dev/sda1 ro single
+  - initrd /initrd.img
+
 - 新式のブートローダ
 - ブートステージの、1.0 , 1.5 , 2.0という概念がなくなっている
-- 
+- boot，core等の概念に分かれている
+- 段階的な実行を想定している
+- MBR
+  - core.img
+  - boot.img
+- UEFI
+  - efiファイル
+
+#### GRUB起動後
+- 1. カーネル解凍
+- 2. カーネル初期化
+- 3. initramfs解凍
+- 4. initramfsのinit実行(ここでファイルシステム)
+- 5. /sbin/initの実行
+- 6. /etc/inittabの参照(SusVinit)
+- 7. レベルに従ったプロセス...
+
+
+### ブートローダにおけるディスク，パーティションの読み取り
+- /boot/grub/device.map
+- GRUBインストール時に生成
+- UEFIでは不要
+
+
+### カーネルパニック
+- カーネルが起動時に実行する手続きが失敗すると発生
+- 再起動するしかない
+- 原因
+  - ルートファイルシステムが壊れている（initが起動できない）
+  - ドライバ，プラグインの故障
+  - アプリケーションの衝突（仮想化ソフトなど）
+  - メモリの不備
+  - リソース不足
+
+### SMP
+- Symmetric Multiprocessing
+- 複数のCPU,CPUコアを使用する動作
+- これを無効化すると，シングルコアで動作
+- grub.conf,gtub.cfgなどで以下を指定
+  - `nosmp`
+  - `maxcpu=1`
+
+#### initramfsって何してんの？
+- こいつはgzip + cpioでRAMに展開される
+- initが実行され，カーネルを起こすのが仕事
+- 1. bin/mknodコマンドで，デバイスファイルを作成
+- 2. bin/mkdirコマンドで必要なディレクトリ作成
+- 3. bin/mountで/procなどの仮想ファイルをマウント
+- 4. bin/mountで，/sysmountにルートを付与
+- 5. /sbin/switch_rootでルートを渡す．
+
+#### Syslinuxプロジェクト
+- bootroaderを開発している所
+- 全部大文字のブートローダはそれ
+- SYSLINUX
+- ISOLINUX
+- EXTLINUX
+- PXELINUX
+
+#### inittab
+- SysVinitにてinitから参照されるファイル
+- 各ランレベルで何を起動するのか指定している
+- ここでもデフォルトのランレベルを指定できる
+- `id:3:initdefault:`
+  - ただし，ブートローダで指定がある場合はそちら優先
+
+
+#### systemctl ランレベルに相当するターゲット
+- default.target
+- poweroff.target
+- rescue.target
+- multi-user.target
+- graphical.target
+- reboot.target
+
+- systmd.unit ={target}
+  - これでも変更できる
+journalctl
+
+
+### systemd-deltaコマンド
+- 設定の変更点と上書きを検出する
+
+
+#### オートマウント
+- リムーバルディスクに対して必要な時にマウントする
+  - メモリ領域の削減を狙う
+- 実行はmountコマンドでマウントしないで実行すること
+  - `systemctl start autofs`
+  - systemctlを使用しているなら`.automount`ユニットでもよい
+
+#### /etc/rcX.dの優先度
+- まずK00{process}が優先される
+- ここからK99までを実行．
+- 次にS00{process}が優先される
+
+#### rc内を管理する
+- RedHat系...chkconfig
+- Debian系...update-rc.d {サービス名} 
+
+#### btrf
+- `btrfs filesystem {command}`
+  - show...ファイルシステムの情報を表示
+  - df...ファイルシステムの使用状況を表示
+  - lebel...ファイルシステムにラベルを設定
+  - resize...ファイルシステムのサイズを変更
+- `btrfs subvolume {command}`
+  - create　{dir}...サブボリュームを作成
+  - delete {dir}...サブボリュームを削除
+  - list...サブボリュームを一覧表示
+  - snapshot...スナップショット作成
+  - show...サブボリュームの情報を表示
+- サブボリュームの基本性質
+
+#### XFS
+- くそでかサイズのファイルが扱える
+- xfs_infoやxfs_dbなどのコマンドから操作
+
+#### ZFS
+- Oracleが開発
+- RAID等の冗長性を持っている
+
+#### mountコマンド
+- 以下の2つで挙動が変わる
+  - `mount {マウント先}`
+  - `mount {dev_file} {マウント先}`
+- 1つ目は，/etc/fstabを参照する．これは/fstabのオプションが適応
+- 2つ目は/etc/fstabを見ないので管理者でないと実行できない
+
+#### /etc/fstabオプション
+- users...一般ユーザにマウントを許可．アンマウントはユーザのみ許可
+- user...一般ユーザにマウントを許可．アンマウントは誰でも可能
+- default...rw,suid,dev,exec,auto,nouser,async
+
+#### loopbackマウントする
+- mount -o loop {iso,img} {entry}
+- --loopとかないので注意！
+
+#### 現在のマウントの確認
+- mount
+- cat /proc/mounts
+- cat /etc/mtab
+  - 今マウントしているファイルシステムの情報
+  - Mount table
+- ※ ftabは設定なのでダメ，file system tabの略らしい．
+
+#### iscsiなどのネットデバイスのマウント
+- 専用のサービスの起動が必要
+- 先にローカルのモノをマウントするようにRCスクリプトを構成
+- mount -a -O no_netdev
+- mount -a -O _netdev
+
+#### fuser
+- ネームスペースに対する検索
+- lsofと似た感じで使用される
+  - 何かのプロセスがファイルにアクセスしている状態を検出
+
+#### ext2から3の変更
+- オプションは小文字のｊ
+
+
+#### fsck主要なオプション
+- 何も指定しないと，/etc/fstabに沿って検査
+- -t...ファイルシステムタイプの指定
+- -b...スーパーブロックを指定する
+  - ブロックに関するデータ．ブロック間毎に記載がある
+- -f...強制
+- -p...pcreen．軽微なエラーは自動的に直す
+- -n/-y...質問にno/yesと回答
+
+#### fsckのチェック結果
+- 参照カウントが1以上のはずが，どこからも参照されてないデータを保管する
+
+#### Linux暗号化ファイルシステム
+- EncFS...ファイルの暗号化を実施
+- eCtyptfs...ファイルの暗号化を実施
+- loop-AES...ファイルをブロックデバイスとして暗号化
+- LUKS...ブロックデバイスを暗号化．dm-cyptを使用する
+  - cryptsetup
+
+#### LUKS関連コマンド
+- cryptsetup luksFormat {dev}...暗号化する
+- cryptsetup luksOpen {dev} {name} ...mapper作成
+  - mapperのエンドポイントにファイルシステム作成
+- cryptsetup luksClose {name} ...mapper削除
+- cryptsetup luksDump...LUKSデバイスのヘッダを表示
+- cryptsetup lsLuls...LUKSデバイスかどうかを表示
+
+#### automount設定ファイル
+- auto.master
+
+
+# 5章
+- RAIDの構成
+- mdadmコマンドから実施
+
+#### RAIDの確認
+- cat /proc/mdstat
+#### LVM
+- tune2fsではextファイルシステムの拡張できない
+
+#### udev, udevadm
+- udev
+  - /etc/udev/rules.d/
+    - ここに従ってdevファイル作成
+    - カーネルロード
+    - 編集可能
+  - /lib/udev/rules.d/
+    - 編集不可能
+- udeadmコマンド
+  - udevの監視
+  - オプション
+    - udevadm info
+    - udevadm trigger
+    - udevadm settle
+    - udevadm control
+    - udevadm monitor
+    - udevadm test
+
+#### SCSIテープドライブdevファイル
+- /dev/st0...テープを戻す
+- /dev/nst0...テープを戻さない
+
+#### dev/disk
+- デバイスを特定するためのリンクを格納
+- /dev/disk/by-uuid
+- /dev/disk/by-label
+- /dev/disk/by-id
+- /dev/disk/bt-path
+
+
+#### hdparm
+- hard disk parameter
+- ハードディスクの計測ができる
+- オプション
+  - -i...詳細表示
+  - -t...転送速度計測
+  - -A...先読み機能OFF(0)/ON(1)
+  - -d...DMA機能
+  - -W...書き込みキャッシュ機能
+
+### 仮想インタフェースに2個目のIPをセットする
+- `iconfig eth0:1 XXX.XXX.XXX`
+- eth0:1...これをラベルと呼ぶ
+- この1の部分は何でもいい．英数字が可能
+- `ip addr add {ip/mask} eth0`
+- `ip addr add {ip/mask} eth0 label X`
+- ipコマンドの場合は，ラベルなしでも2個目可能
+
+#### 無線
+- iwconfig
+- iwscan
+
+#### ipコマンドでARPを表示する
+- 以下のどれでもいい
+  - ip neigh
+  - ip neighboer
+  - ip n
+
+#### nmap
+- ポートスキャンする
+
+#### ポートを指定したリクエスト
+- telnet [host] [port]
+- nc [host] [port]
+
+#### tcpdによるフィルタ
+- /etc/hosts.denyもしくはhosts.allow
+- サービス名：ip(レンジ)
+- sshd:172.158.0.0
+- レンジを指定する場合
+  - プレフィクス表示はNG，/16など
+  - サブネットマスクはOK/255.255.255.0など
+  - IPを途中で切ってもOK 192.168. など
