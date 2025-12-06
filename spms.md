@@ -133,7 +133,7 @@
 - 2. `make`
   - .configに従って、ビルドを実行。
   - ここでは正規の場所には置かれていない。
-- 3. make_modukes_isntall
+- 3. make_modules_isntall
   - モジュールを/lib/modules/に移動
   - modules.depが生成。これはinitramfsに参照される
 - 4. make install
