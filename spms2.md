@@ -104,6 +104,10 @@
   - カーネルそのもの
 - /usr/src/linux/arch/
   - アーキテクチャごとのコード
+- /usr/src/fs/
+  - ファイルシステム系のモジュールはここ
+- /usr/src/net/
+  - ネットワーク系のモジュールはここ
 
 
 ### カーネルのソースコードビルド
@@ -120,4 +124,108 @@
 - make install
 
 
-### 
+### make oldconfig
+- /boot配下の現行の.configファイルを持ってきてくれるわけではない
+  - cpして持ってくる必要あり
+  - cp /boot/$(uname -r).config
+- make oldconfig
+
+### 圧縮系コマンドオプション
+- tar
+  - z,j,J...gzip,bzip2,xz形式を指定
+  - c,x,t...作成、展開、中身の確認
+  - l...メタデータの表示(bzip2には無い)
+    - 圧縮率、チェックサムの種類、ブロック数など
+  - v...処理の詳細情報の表示
+  - f...アーカイブファイル名を指定
+    - これが入ると、ファイル名が圧縮元より先にくることになる
+    - ストリームを扱う場合以外は、tarは必須なオプション
+
+- gzip,bzip2,xz
+  - k...圧縮前後のファイルを保持する
+  - d...解凍
+  - c...標準出力に出す
+  - r...再起的にディレクトリの中身の圧縮ファイルを作成
+
+### patchコマンド
+- `command | patch`でも実行可能
+  - 標準出力に出された内容を適応する
+- `patch < patchfile`
+  - ファイルを入力
+
+### カーネルの設定ファイル
+- /proc/sys/ ... ここにあるのが現在の設定
+- /etc/sysctl.conf...sysctlによって管理される
+- 現在では，/etc/sysctl.d/*.confになっている
+
+### initramfsを作成するコマンド
+- dracut
+  - ドラクートとか発音する．draculaっぽいね．
+  - ドラカットでも正解っぽい
+- mkinitrd
+
+### grub レガシーにおけるディスクの参照
+- `/boot/grub/device.map`
+  - どのデバイス，パーティション番号(hd0)が，どのデバイスファイル/dev/sdaに結びついているか確かめられる
+- これはあくまでBIOS経由
+  - なので，bootloadrと/bootだけの記述されていればよい．
+- Linuxカーネルはドライバから存在を検知するので，独立している
+
+### ブート時にカーネルに渡したパラメータ
+- 3.17
+- /proc/cmdline
+
+### SysVinit
+- /etc/inittab ... initが最初に参照する設定ファイル
+- /etc/rc.d/rc.sysuit...全てのランレベルで事前に実行される
+- /etc/rc.d/rcX.d/...それぞれのランレベルのS/Kが格納
+- /etc/init.d/ ... initで使用する実プログラムの場所
+
+
+### カーネルパラメータでsystemdを制御
+- grub.cnf等に systemd.unit=rescue.targetなどと記述可能
+- カーネルはこのオプションを無視する
+- systemdによって読み取れる
+
+### systemd起動シーケンス
+- 色々なtargetがtargetを呼んで起動している
+- どんなランレベルでも`sysinit.target`は起動する
+- `resucue.target`以外は，以下を経由する
+  - `basic.target`，そのあとに，
+  - `multi-user.taget`を経由
+
+### systemdで使われているストレージを見る
+- mountユニット
+  - ローカルファイルシステムのマウント
+  - NFSマウント
+- automountユニット
+  - オートマウント
+- swapユニット
+  - スワップ領域
+
+### スワップ領域をfstabに書く
+- 起動時に自動的にmountしてくれる
+## 3-30
+### chkconfig
+- RedHat系で/etc/rcX.d/配下にリンクを作る
+- chkconfig {serbvice} on
+- chkconfig {service} off
+
+### update-rc.d
+- Debian系で/etc/rc.X.d/配下にリンクを作る
+- update-rc.d service default
+- update-rc.d service -f remove
+
+3-30
+
+
+
+
+
+
+
+
+
+
+
+
