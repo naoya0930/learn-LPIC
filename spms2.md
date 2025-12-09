@@ -216,16 +216,163 @@
 - update-rc.d service default
 - update-rc.d service -f remove
 
-3-30
+### XFS
+- スナップショットは無い
+- くそでかいファイルを使える
+
+### ZFS
+- Linuxコミュニティのサポートではない
+- Btrfsと同じような性能だが，より強力
+- 高い信頼性を保有するが，要求メモリが膨大
+- RAIDあり．専用コマンド有
+  
+
+### ISOファイルを作成する
+- `mkisofs`
+  - -R...Unix対応
+  - -J...Microsoft規格
+  - -o...出力先ファイル名を指定
+  - -T..Trans.TBLを作成．長いファイル名を作成可能
+- 規格
+  - Rock Ridge...Unix規格
+  - Joliet..Microsoft規格(アメリカのイリノイ州の地名)
+  - UDF... Universal Disk Format規格
+- `mkisofs -T -J -o filename`
+
+### iso とimgって何が違う？
+- iso..CD,DVD
+  - パーティションを持たない
+  - CD,DVDのフォーマット
+  - 最近はUSBに置くこともできる（Hybrid ISO）
+- img...CD,imgのファイル
+
+### マウントオプションusers, user
+- users
+  - 誰でもマウントできる
+  - 誰でもアンマウント
+- user
+  - 誰でもマウント
+  - そのユーザのみアンマウント
+- usersの方が寛容と覚える
+
+### isoファイルをマウントする 
+- `mount -o loop fs.iso /mnt`
+
+### iscsi
+- Internet Small Conputer System Interface
+  - SCSIをTCP/IPで行う
+- ISCSIはストレージとして扱う
+- PXEブートローダでは，カーネル，initramfsだけ
+  - 全く違う通信
+### iscsiの用語
+- Initiator
+  - ディスクを利用する側
+- Target
+  - ディスクを提供し，要求に答える
+- iqn
+  - iSCSI Qtantified Name
+  - SCSIデバイスを識別するための番号
+  - iqn.yyyy-mm.{domain}:{freename}
+- eui
+  - Extended Unique Identifier
+  - こちらもSCSIデバイスを識別するための番号
+  - eui.{preserved ID}
+  - IEEEが番号払い出ししてくれる
+
+### iscsi利用までのプロセス
+- 1. iSCSIセッションの確立
+- 2. SCSIデバイスとしてカーネルに認識(/dev/sdX)
+- 3. そのデバイスをマウント
+
+### iscsiadm
+- イニシエータ側が接続するためのコマンド
+- モードという概念がある
+- `iscsiadm -m` が主要
+- `iscsiadm -m discovery -r sendtarget -p {ip}`
+  - -m discovery で探索モード
+  - -r sendtargetで一覧取得．他にもisns(isns nameserver)も指定可能
+- `iscsiadm -m node`
+  - 探索済みのターゲット情報を表示
+- `iscsiadm node --login -p {ip}`
+  - ログイン．認証には/etc/iscsi.confを使用
+
+### iscsiで使用するファイル
+- /etc/iscsi/
+  - descoveryモードで発見したターゲットの保存
+- /etc/iscsi.conf
+  - このファイルの変更時には，systemctl restart iscsidを実行
+  - iscsiadmの設定ファイルが入っている
+  - `node.setup = manual`
+    - OS起動時に自動でログインしない
+  - `node.setup = automatic`
+
+### iscsiにおけるログイン
+- 基本はCHAP=ID + Pass
+- /etc/iscsi.confに以下を設定
+  - node.session.auth.authmethod = CHAP
+  - node.session.auth.username =
+  - node.session.auth.password = 
+
+### fuser
+- lsofと並ぶファイルに対するアクセス者を特定するコマンド
+- fuser -v {filename}が基本
+  - ファイルを確保しているPID,ユーザ，COMMANDを見せる
+### nmap
+- ポートスイープに使うやつ
+- nmap -p が基本
+
+### tune2fs
+- オプション
+  - `-l`...スーパーブロックの内容を表示
+  - `-L`...ラベルをつける
+  - `-j`...ext3ジャーナルに変更
+
+### dumpe2fs
+- バックアップの取得コマンドではない！！！
+- ext系の形式のファイルシステムの設定を確認
+- 基本的にはマウントを外して実行
+- `dumpe2fs -h {ext_dev}` ...スーパブロックのみ表示
+- `dumpe2fs -b {ext_dev}`...ブロックの使用状態の表示
+- `dumpe2fs -f {ext_dev}`...マウント中でも強制実行
+
+### debugfs
+- 対話モードでext系のファイルシステムの検証
+- オプション
+  - -r...読み取り専用で開く
+  - -R...一度だけコマンドを実行
+  - -f...コマンドが記載されたファイルを実行
+- 対話で使用できるコマンド
+
+### ★【40-24】fsckの自動修復
+- `fsck -p`
+
+### 【4-29】cryptsetup
+- Linux Unified Key Setupの略
+- /dev/mapper/{mapper_name}からアクセス
+- LUKSは鍵管理と暗号化を実現した仕組み名
+- dm-cryptはLUKSの暗号化エンジン
+- アクション
+  - `cryptsetup luksFormat {dev}`
+    - LUKSパーティションを初期化する
+  - `cryptsetup lulksOpen {dev} {map_name}`
+    - パスフレーズを使用してmapper作成
+  - `cryptsetup luksClose {map_name}`
+    - mapper削除
+    - アンマウントした後に実行
+  - `cryptsetup luksDump {dev}`
+    - LUKSのヘッダ情報の表示
+  - `cryptsetup luksAddkey {dev}`
+    - パスフレーズの追加
+    - パスフレーズは8個まで
+  - `cryptsetup luksRemovekey {dev}`
+    - パスキーを削除する
+    - 0個にすることもできる（完全削除）
+  - `cryptsetup isLuks {dev}`
+    - デバイスがLUKSかどうかを判断する
+### 
 
 
 
 
 
-
-
-
-
-
-
-
+### LVMにおけるPV,LG,LVの配置
