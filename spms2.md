@@ -602,13 +602,16 @@
 - Linuxの一般的なアプリケーションの構成
 ### Autotools
 - アプリケーションの開発者がセットアップのために使用する
-- configureというファイルを出力する
+- 開発者は，configureというファイルを出力してパッケージに入れる
 - 配布後，ダウンロードしたユーザはこれを実行する
 - CMakeでは，CMakeList.txtと命名されていたりする．
 - ★ Linuxのソースコードではこの方式ではない
   - `make menuconfig`などを利用する
 
-
+### automake
+- Makefileを作るためのMakefile.inを作成するツール
+- 設定ファイルは`Makefile.am`
+- 
 ### LVMにおけるPV,LG,LVの配置
 
 ### 主要なポートとプロトコル
