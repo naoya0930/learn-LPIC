@@ -395,11 +395,224 @@
   - この部分は編集しても再起動不要
   - マップファイルとはこれを指す
 #### マスターフファイル
-#### マップファイル
+- 関節マウント
+  - `/auto  /etc/auto.misc`等の記載
+  - /autoディレクトリを作成する
+  - `/etc/auto.misc`ファイルの内容を展開する
+  - `etc/auto/share`や`etc/auto/backup`などが展開
+- 直接マウント
+  - `/-   /etc/auto.direct`
+  - マウントトップのディレクトリを作成しない
+  - `/mnt/share`や`/home/backup`などが展開
 
+#### マップファイル
+- key
+  - アクセスされる名称
+- オプション
+  - fstype=nfs,rwなど
+- マウント対象(location)
+  - 実際にマウントされるデバイスやリモート共有
+
+#### マップファイルのキー
+- 間接マウントの場合は，ディレクトリ名を記載
+  - `share`など
+- 直接マウントの場合は，絶対パスを指定
+  - `/mnt/share`など
+#### マップファイルのマウント対象
+- ローカルから見えるマウント対象
+  - :dev/sda1
+  - :dev/mapper/vg0-1v_data
+- NFS
+  - sever:/export/share
+  - mfssserver:/home
+- CIFS/SNB
+  - //fileserver/share
+- SSHFS
+  - user@host:/data
+
+## 5章
+#### mdadm
+- モード
+- Assenble..作成済みRAIDアレイの情報参照(-A)
+- Create...新規に作成する（-c）
+- Manage...デバイスの追加，削除
+- Monitor...定期的な確認(-F,--follow,--monitor)
+- Misc...そのほか
+
+#### mdadm マネージオプション
+- mdadm -add (md) (dev)
+- mdadm -fail (md) (dev)
+- mdadm -remove (md) (dev)
+
+#### mdadm設定ファイル
+- /etc/mdadm.conf
+
+#### mdadmの状態観測
+- /proc/mdstat
+
+#### udevadm
+- udevの管理コマンド
+  - udevはコマンドではない
+#### udevadmの設定ファイル
+- デバイスをマウントする条件を決める
+  - `/etc/udev/rules.d`
+
+#### テープデバイスの仮想ファイル
+- /dev/st0...作業後にテープを巻き戻す
+- /dev/nst0...作業後に巻き戻さない
+
+#### 仮想devファイルに対する情報の取得
+- /dev/disk/{file}
+- 主要なファイル
+  - by-uuid
+  - bu-path
+  - by-dname　など
+
+### hdparm
+- オプション
+  - -l...設定の一覧表示
+  - -t...読み込み時の転送速度計測
+  - -A...先読み機能を利用(0でオフ，1でオン)
+    - read-ahead
+    - 要求された少し先のブロックも一緒に読み込んでキャッシュに乗せる
+  - -d...DMAモードの利用
+    - Direct Memory Access
+    - デバイスがメモリを直接転送
+  - -W...書き込みキャッシュの利用
+#### hdparm,sdparm
+- hdparm...ATA系デバイス(ATA,SATA)
+- sdparm...SCSI系デバイス（SCSI,SAS,USB-SCSI）
+
+
+
+## 6章
+#### ifconfig
+- オプション
+  - -a...停止しているインタフェースも表示
+  - -s...短縮系で表示
+  - -V...ifconfigのバージョンを表示
+- インタフェース操作
+  - `ifconfig eth0 up`など
+  - up...起動
+  - down...停止
+
+#### インタフェースフラッグ
+- そのインタフェースがどういう状態か示す
+- `UP`...起動中，ダウンしている場合は，何も表示しない
+- `LOOPBACK`...ループバックインタフェース
+- `BROADCAST`...ブロードキャスト受信が有効
+- `RUNNING`...データリンクのリソースを確保する
+- `MULTICAST`...マルチキャスト受信
+
+### 【6-4】2番目のIP設定におけるifconfig vs ip addr
+- セカンダリIP付与などと呼ぶ
+- `{ethX}:{lebel}`という書式はifconfigでしか使用しない
+- 実の所，labelは表示上の制御でしかない
+- `ifcofig eth0:{label} XX.XX.XX.XX`はOK
+- `ip addr add {ip} dev eth0`もOK．
+  - ちゃんとセカンダリとして割り当てられる
+- `ip addr add {ip} dev eth0 label eth:0:0`
+  - この書き方もできるが非推奨
+
+#### 無線ネットワーク関連のコマンド
+- iw
+- iwconfig
+- iwlist
+
+#### 物理デバイス(phy)，デバイス(dev)
+- phy...チップそのもの
+  - 電波，周波数，出力を管理
+  - `iw phy`で見える
+  - チップが何ができるかを表示する
+  - L1(物理層レイヤの情報)
+- dev...OSから見えるネットワークインタフェース
+  - アップダウンする対象
+  - OSが扱う
+  - IPを持っている
+
+### 【6-19】特定ドメインの特定ポートを検証する
+- nc,telnet
+
+### 【6-22】ルートテーブルのフラッグ
+- arpじゃないよ！IPとIPの通信
+  - ip route addで追加
+  - DHCPのOption
+  - OSPF/RIP/BGP
+- Flags
+  - U...有効
+  - H...宛先がホスト
+  - G...ゲートウェイに送信
+  - I...経路が無効
+  - !...送信の拒否，転送をしない
+
+### routeコマンド
+- このコマンドはメモリ上のroute tableに対する操作
+- なので，再起動で消える
+- `route -n`...テーブルの確認
+- `route add -net X netmask X`...テーブルへのネットマスク有の追加
+- `route add -host X` ... 単一ホストへの転送．Hフラグが付く
+- `route add default gw X` ... これには -netや-hostは必要ない
+   - `-net 0.0.0.0 netmask 0.0.0.0 gw X`
+- `route del -net X netmask X`
+- `route del -host X`
+   - ★`ip route del` の場合は，netやhostは必要ない
+
+### ipコマンドにおけるルートの追加
+- `gw`ではなく，`via`になる
+- シンタックス上は`ip route X gw Y`でも可能だが，LPICでは認めない
+- `via`修飾子を手前に持ってきてもいい
+  - `ip route add via {gw} {ip/prefix}`
+  - ★ routeではこの記法は認められない
+  - さらにデフォルトゲートウェイの指定はipを省略可
+  - `ip route add via {defaultgw}`
+### 【6-31】ip route showの見方
+- metric... 低い方が優先される
+- リンクダウンしていないか確認すること
+  - ethXに対して，linkdownステータスが見えているしている場合は，そのENIはダウンしている可能性が高い
+
+### ホスト名の解決
+- `/etc/nsswitch.conf`のhosts:XXXに従う
+  - ここの設定項目は先に書かれたものを優先する
+- `hosts: files dns`と記載した場合，
+  - `/etc/hosts`を参照
+  - その後，`etc/resolve.conf`のdnsに聞きに行く
+
+### hostコマンド
+- digと似たようなコマンド
+  - digはdnsに対して検索を実行する
+  - `/etc/hosts`の内容を見ない
+- hostコマンド
+  - こちらもdnsに対して問い合わせする
+  - 他のレコードを持ってこないのでシンプル
+  - `host {hostname}`...ホストネームからＩＰ検索
+  - `host {ip}`...IPからホストを検索
+
+### オンラインストレージ管理コマンド
+- cifsiostat
+  - common internet filesystem io statistics
+  - SMBのこと．CIFSとも呼ばれていることから
+  - 代表的にはSAMBAサーバを使用する
+- nfsstat
+  - network file server statistics
+- nfsiostat
+  - network file io statistics
+
+
+### 7章
+- Linuxの一般的なアプリケーションの構成
+### Autotools
+- アプリケーションの開発者がセットアップのために使用する
+- configureというファイルを出力する
+- 配布後，ダウンロードしたユーザはこれを実行する
+- CMakeでは，CMakeList.txtと命名されていたりする．
+- ★ Linuxのソースコードではこの方式ではない
+  - `make menuconfig`などを利用する
 
 
 ### LVMにおけるPV,LG,LVの配置
+
+### 主要なポートとプロトコル
+
 
 
 cryptsetup

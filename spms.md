@@ -525,7 +525,6 @@ journalctl
 
 #### 無線
 - iwconfig
-- iwscan
 
 #### ipコマンドでARPを表示する
 - 以下のどれでもいい
