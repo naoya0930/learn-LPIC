@@ -78,9 +78,55 @@
 - TFTPを使用して、一部のefiファイルのダウンロードを実行
 - カーネルと、initramfaをダウンロードしてメモリに展開
 - つまり、ストレージが0GBでも原理上は動作する
+- 
+### 【3-19】色んなinit
+- (initramfs)init
+- /sbin/init
+- /etc/inittab
+- /etc/init/init.d/
+- /etc/init/rc.d
+- /etc/rcX.d/
 
-/etc/init/init.d/
-/etc/init/rc.d
-/etc/init
+### 【3-29】chkconfig
+- RedHat系の/etc/rcN.dの管理
+- chkconfig {} on
+- chkconfig {} off
+### 【3-30】update-rc.d
+- Debian系の/etc/rcN.dの管理
+- update-rc.d {} defaults
+- update-rc.d {} remove
 
-### 【3-19】
+### 【4-8】mkiofs
+- フォーマットオプション
+  - -R...Unix(POSIX)に対応するRock Ridge
+  - -J...WindowsでよめるJoliet
+  - -T...長い名前を使用可能にするTransaction Table
+  - ※ フォーマットは全部大文字
+
+### 【4-18】プロセスが抱えているファイル
+- lsioじゃない！
+- lsof(list open file)
+
+### 【4-19】fuser
+
+### 【4-20】tune2fs
+- eは一個でいい
+
+### 【5-4】mdadmの設定ファイル
+- 起動時の自動組み立て構成や
+- メール通知の設定が含有
+- `/etc/mdadm.conf`が一般だが，配置は決まっていない
+- ルートファイルシステムをRAIDに乗り上げつ場合
+  - initramfsにmdadm.confを入れることもある
+
+### RAIDの通称名
+- RAID0...ストライピング
+- RAID1...ミラーリング
+- RAID5...分散パリティ
+- RAID6...ストライプド・ミラー
+
+### 【5-19】udevadm
+- `udevadm monitor`
+  - デバイスの追加，削除，変更を監視
+
+
