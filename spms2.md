@@ -668,9 +668,19 @@
   - ヘルス、属性、エラーログ、テスト履歴を表示
   - 
 ### LVMにおけるPV,LG,LVの配置
+- PV...ブロックデバイスそのものを指定する。
+  - Phisical volumeに新しく/devは作成しない
+- VG.../devファイル上に存在しない
+- LV...新しく/devファイルが作成される
+- `/dev/vg_data/lv_home`
+- `/dev/mapper/vg_data-lv_home`
 
 ### 主要なポートとプロトコル
-
-
+- 21...FTP
+- 22...SSJ
+- 23...Telnet
+- 25...SMTP
+- 53...DNS
+- 67...DHCP
 
 cryptsetup

@@ -16,11 +16,11 @@
 
 ### 【1-12】
 - Nagios...ネットワーク上のホストの状態を監視。結果をブラウザにグラフ表示
-- MRTG...Multi Router Traffic Graoher。グラフ画像をWebサーバから見る
-- Cacti...RRD(Round Robin Database)形式のデータでブラウザにグラフ表示
+- MRTG...Multi Router Traffic Graoher。グラフ画像をWebサーバから見る。SNMP
+- Cacti...RRD(Round Robin Database)形式のデータでブラウザにグラフ表示。SNMP
 - Icinga2...オープンソースネットワーク管理ツール
 - colledctd...システムの統計情報を収集し、結果をRRDファイルに保存
-- iptraf(iptraf-ng)...TUI方式のモニタ。TCP,UDPとネットワークI/Fを見る
+- iptraf(iptraf-ng)...TUI方式のモニタ。TCP,UDPとネットワークI/Fを見る。ローカルの監視のみ
 
 ### 【2-2】
 - prepatch
@@ -96,7 +96,7 @@
 - update-rc.d {} defaults
 - update-rc.d {} remove
 
-### 【4-8】mkiofs
+### 【4-8】mkisofs
 - フォーマットオプション
   - -R...Unix(POSIX)に対応するRock Ridge
   - -J...WindowsでよめるJoliet
@@ -128,5 +128,41 @@
 ### 【5-19】udevadm
 - `udevadm monitor`
   - デバイスの追加，削除，変更を監視
+
+### 【5-20】テープストレージ
+- /dev/nst0
+  - No Rewind SCSI Tape Device
+- /dev/st
+  - SCSI tape Device
+
+
+### 【5-24】 hdparm
+- IDEデバイスのパラメータ観測
+- オプション
+  - -l...詳細を表示
+  - -t...読み込み時の転送速度を測定
+  - -A...先読み機能
+  - -d...DMAモード
+  - -W...Write Cache
+
+### 【5-25】sdparm
+- SCSIデバイスのパラメータ
+
+### libata
+- こいつのおかげで現在はIDEデバイスでもSCSI互換性がある
+
+
+### 【6-32】tracerouteが使用するプロトコル
+- ICMP
+- UDP
+
+
+
+
+chkconfig Redhat
+
+chkconfig sshd --level 1 on 
+update-rc.d sshd defaults/remove
+
 
 
