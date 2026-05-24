@@ -425,7 +425,171 @@ host MyServer {
 }
 ```
 
-- よく出るディレクティブ
+# Q14
+###　メール関係のツールのライブラリ
+- MTA
+  - Postix
+    - /etc/postfix/main.cf ... postfixの工藤構成
+    - /etc/postfix/master.cf ...内部コンポーネントの挙動を設定
+  - Sendmail ...
+- MDA
+  - Dovecot
+    - /etc/dovecot/dovecot.conf ... 主要な設定
+    - /etc/dovecot/conf.d/ ...MDAの挙動、仕分けの設定
+
+### /etc/postfix/main.cfについて
+
+```
+
+# 1. ドメイン・ホスト・ネットワークの基本設定
+
+# サーバーの完全修飾ドメイン名 (FQDN)
+myhostname = mail.example.com
+
+# 担当するドメイン名
+mydomain = example.com
+
+# 送信元メールアドレスの「@以降」のデフォルト値（例: user@example.com になる）
+myorigin = $mydomain
+
+# このサーバーが「自分宛て」として受信するドメインのリスト
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+
+# メールを待ち受けるネットワークインターフェース
+# 全てから待ち受ける場合は "all"、ローカルのみなら "localhost"
+inet_interfaces = all
+
+# 使用するプロトコル（ipv4, ipv6, または両方の場合は all）
+inet_protocols = all
+
+# 2. リレー（転送）および信頼するネットワークの設定
+
+# 認証なしでメールの「外部送信（リレー）」を許可する信頼されたネットワーク
+# ローカルホストと、自身の所属するLANセグメントを指定します
+mynetworks = 127.0.0.0/8, 192.168.1.0/24
 
 
+# 3. メールボックス・配信設定
 
+# メールボックスの保存形式。
+# 現代の標準である「Maildir/」（1メール1ファイル、ディレクトリ管理）を推奨
+home_mailbox = Maildir/
+
+# メールの最大サイズ制限（バイト単位：以下は約20MBの例）
+message_size_limit = 20480000
+
+
+# 4. セキュリティ・アクセス制御 (SMTP制限)
+
+# クライアントが接続してきた際の制限規則
+# 信頼されたネットワーク（mynetworks）からの接続、または認証済みユーザーのみ外部送信を許可
+smtpd_recipient_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_unauth_destination
+
+
+# 5. SASL認証設定（SMTP認証：送信時のパスワード確認）
+# ※DovecotをMDA/MRAとして併用し、その認証機構を利用する設定例
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+broken_sasl_auth_clients = yes
+
+# 6. TLS設定（通信の暗号化：SSL/TLS）
+
+# 受信（SMTPサーバー）側の暗号化設定
+smtpd_tls_cert_file = /etc/pki/tls/certs/mail.example.com.crt
+smtpd_tls_key_file = /etc/pki/tls/private/mail.example.com.key
+smtpd_tls_security_level = may
+smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtpd_tls_loglevel = 1
+
+# 送信（SMTPクライアント）側の暗号化設定
+smtp_tls_security_level = may
+smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+
+
+# 7. その他の基本運用設定
+
+# エラーなどの通知をシステム管理者に送る設定
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+# バージョン情報を隠蔽（セキュリティ対策）
+smtpd_banner = $myhostname ESMTP
+
+```
+
+
+### main.cfmのmydomain、myhostnameについて
+- myhostname
+  - これは自身のドメイン名
+  - mail.example.com
+- mydomain
+  - 自身の担当するドメイン名
+  - example.com
+- 上記設定の場合、NXレコードは下記
+  - `example.com. MX 10 mail.example.com.`
+
+
+### 会社が新しいドメインを取得した場合の処置
+- DNSに既存のものと併せて新しいMXレコードを追加する
+  - old-example.com MX 10 mail.old-example.com
+  - new-example.com MX 10 mail.old-example.com　（追記）
+- 設定ファイルを以下に変更
+  - myhostname      mail.old-example.com
+  - mydomain        old-example.com
+  - mydestination   $myhostname, ... , new-example.com (追記)
+
+- ☆ mydomainはmain.cfに一つしか設定できない。
+  - そのため、新しいドメインを追加してもここに書くことはできない
+  - 設定の見た目は変だけど
+
+
+# Q15
+### dovecot configration
+- docvecot.cof主要な設定
+  - `disable_plaintext_auth`
+    - 暗号化されていない接続でのプレーンテキスト配信許可(yes,no)
+  - `auth_mechanisms`
+    - 認証方式の選択
+    - plain,logon,cram-md5から選択
+  - `ssl`
+    - SSL設定の有効化設定(yes,no,required)
+    - yes...暗号化していない通信でも受け付ける
+    - no...sslを使わない
+    - required...暗号化された通信のみを許可する
+  - `mail_location`
+    - MTAがMaildir指定の場合、`mail_location = maildir:~/Maildir`など
+    - 具体的なメールの配置先を記載する
+
+#### dovecot認証メカニズム
+- IMAP,POP3での使用
+- 旧版のIMAP,POP3には脆弱な認証しか定義されていなかった
+- SASL(Simple Authentication and Security Layer)によっていくつかの認証を定義
+- SASL(RFC 4422)での認証
+  - plain
+  - login...IDを送ってからパスを送る(古い)
+  - cram-md5
+  - digent-md5
+  - scram-sha-1
+  - apop
+
+### SIEVEの記法
+- fileinto...指定した配送先へ
+- keep...デフォルトのメールボックスへ
+- discard
+- reject
+- redirect...指定したアドレスに転送
+- stop ...処理を停止する
+- vacation
+
+### コマンドエイリアスの設定を最新版にする
+- newaliases
+
+
+# Q 16
+###
