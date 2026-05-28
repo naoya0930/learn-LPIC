@@ -630,4 +630,66 @@ smtpd_banner = $myhostname ESMTP
   
 
 ### samba基本
-- 
+- 仕組みは認証+ ファイル共有
+  - PAMを組み込めば、ログインにも使える
+- security = user
+  - ファイル管理
+- security = ADS
+  - アクティブディレクトリ構成
+  - マスターの一つとして動作する
+- パスワード管理
+  - Unixシステムとsambaのパスワードは一致しなくてもいい
+  - `unix password sync = yes`にしなければローカルとリモートでパスワードが変わってくるので大変
+
+- sambaコマンド
+- pdbedit
+- smbpasswd
+- testparm
+- net
+- smbclient
+
+#### 主要なsecurityパラメータ
+- 下記の設定はsamba 3
+  - security = user...ファイルでのユーザ管理
+  - security = ads...外部のADに投げる
+  - security = domain...windows NTに投げる
+- samba4の場合は下記
+  - server role = standalone server
+    - ローカルファイル認証
+  - server role = member server
+    - 既存のwindows AD(Samba AD)のマスターの一つとして参加
+  - server role = active directory domain controller
+    - 認証の親(ドメインコントローラとして動作)
+    - DNSやKerberos認証の機能も提供する
+
+#### user以外のwindowsADとの認証プロセス
+- Kerberos認証(新) or NTLM認証(旧)
+  - NTLMはwinbindを使う。Kerberosはrealmを使う
+- sambaは両方使えるが、sssdはNTLMは使えない。
+- 認証にはどちらかを設定する
+  - ☆ ファイル共有としての機能とは別
+  - 
+### server role = membaer serverの挙動
+- relam
+  - 単一の認証が管理する領域のこと
+  - ADもしくはSambaにおいてはKerberosが管理するドメイン
+    - プリンシパルとも呼ぶ
+  - smb.confにこれを書くことでKerberos認証する
+- realmを書くと良いこと
+  - 
+```
+[global]
+    # 役割の指定
+    server role = member server
+    
+    # 認証を外部のActive Directoryに丸投げする指定（必須）
+    security = ads
+    
+    # ドメイン名（NetBIOS名とDNS名）
+    workgroup = CORP
+    realm = CORP.EXAMPLE.COM
+
+    # 外部のユーザーID（SID）をLinuxのUIDにマッピングする指定（Winbind用）
+    idmap config * : backend = tdb
+    idmap config * : range = 3000-7999
+```
