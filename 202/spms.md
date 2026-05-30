@@ -669,14 +669,16 @@ smtpd_banner = $myhostname ESMTP
 - 認証にはどちらかを設定する
   - ☆ ファイル共有としての機能とは別
   - 
-### server role = membaer serverの挙動
+### 認証におけるserver role = membaer serverの挙動
 - relam
   - 単一の認証が管理する領域のこと
   - ADもしくはSambaにおいてはKerberosが管理するドメイン
     - プリンシパルとも呼ぶ
   - smb.confにこれを書くことでKerberos認証する
 - realmを書くと良いこと
-  - 
+  - 認証はこの機能を利用する
+  - ファイル共有としての機能はwinbindを利用する
+- 
 ```
 [global]
     # 役割の指定
@@ -693,3 +695,6 @@ smtpd_banner = $myhostname ESMTP
     idmap config * : backend = tdb
     idmap config * : range = 3000-7999
 ```
+
+# Q17
+### 
