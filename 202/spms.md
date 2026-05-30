@@ -697,4 +697,8 @@ smtpd_banner = $myhostname ESMTP
 ```
 
 # Q17
-### 
+### sambaコマンド
+- pdbedit...ユーザの表示、登録、変更、削除
+- smbpassw...パスワードの登録、変更、削除
+- tesetparm...設定ファイルの構文チェック。問題なければロード。
+- 
