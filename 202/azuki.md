@@ -234,3 +234,56 @@ api 60  IN  A    192.168.1.200
 - `htpasswd -n user1`
   - 標準出力に出す
 
+### クライアント証明書を要求する
+- SSLVerifyClient
+  - SSLVerifyClient require...必須で要求する
+  - SSLVerifyClient optional...なくても良い
+
+### サーバ証明書を利用する(SSL)
+- 以下3つの有効化が必要
+  - SSL Engine on 
+  - SSLCertificateFile xxx.crt ... 公開鍵
+  - SSLCertificateKeyFiile XXX.key...秘密鍵
+
+### VirtualHost vs NameVirtualHost
+- VirtualHost
+  - httpdのサブプロセス
+  - 1つの物理サーバで複数のサイトを運営するための役割
+  - ポート、ヘッダ、IP、ホスト名で異なるサイトに飛ばすことができる
+- NameVirtualHost
+  - httpdに対してVirtualhostを使うことを知らせるディレクティブ
+  - 2.4以降、必須ではなくなった。
+
+### ホスト名で分けるという事
+
+```
+<VirtualHost *:80>
+    ServerName example.com
+    DocumentRoot /var/www/com
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName example.net
+    DocumentRoot /var/www/net
+</VirtualHost>
+```
+
+- 上記は、example.comとexample.netを同じサーバで管理している
+- ドメインは2つ取らなければならず、それぞれのDNSも用意する必要がある。
+- Aレコードの指定が同じIPを指す
+- Apache2側で、到達ドメインから異なるページを戻す仕組み
+  
+### IPベースで分けるということ
+- 物理マシンに2つのネットワークカード(IP)が必要
+
+```
+# こちらはメイン。サーバが持つENIのIP
+DocumentRoot "/var/www/site_main"
+
+# メインとは違う「もう1つのIP」だけを、VirtualHostとして追加する
+<VirtualHost 192.168.1.20:80>
+    DocumentRoot "/var/www/site_secondary"
+</VirtualHost>
+```
+
+2-25～
