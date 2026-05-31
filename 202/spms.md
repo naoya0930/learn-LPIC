@@ -704,6 +704,9 @@ smtpd_banner = $myhostname ESMTP
 
 # retry
 ### いろんなport
+- Apache http
+  - Port XX...(古い。これだと一つしか指定できない。)
+  - Listen XXX...新しい。複数指定できる。(2.2以降)
 - squid
   - http_port...フォワードプロキシの受付ポート
 - nginx
