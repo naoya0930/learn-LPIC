@@ -318,7 +318,7 @@ index   mail                    eq,sub
 
 ### 操作のためのLDIF
 - 新しいLDIFを定義してそれをデータベースに投げつけて変更を知らせる
-- LDIF中に`changetype:`を与えることで変更を定義
+- LDIF中に特殊なDNである`changetype:`を与えることで変更を定義
 - パラメータによって挙動が変わる
   - `changetype: add`...エントリを追加する
   - `changetype: modify`
@@ -701,4 +701,44 @@ smtpd_banner = $myhostname ESMTP
 - pdbedit...ユーザの表示、登録、変更、削除
 - smbpassw...パスワードの登録、変更、削除
 - tesetparm...設定ファイルの構文チェック。問題なければロード。
-- 
+
+# retry
+### いろんなport
+- squid
+  - http_port...フォワードプロキシの受付ポート
+- nginx
+  - listen...リバースプロキシの受付ポート
+- bind
+  - listen-on
+- Openssh
+  - Port
+
+### Nginx 構成
+- main...プロセス、リソースの設定
+- http...この配下にHTTPに関する情報を書く
+  - server...ドメイン、ポートによってホストを分ける
+  - location...パスによる転送先の設定
+- stream...HTTP以外の送受信設定
+
+### PAMライブラリと主要な挙動
+- pam_unix.so...全てのセクションで使用できる。passwd/shadowに関する設定
+- pam_rootok.so 
+- pam_wheel.so
+- pam_listfile.so 
+- pam_securetty.so
+- pam_nologin.so 
+- 主にaccountで使うモジュール
+- pam_unix.so
+- pam_time.so
+- pam_succeed_if.so
+- 主にpasswordで使うモジュール
+- pam_unix.so
+- pam_cracklib.so
+- pam_env.so 
+- pam_pwdb.so 
+- 主にsessionで使うモジュール
+- pam_limits.so ...リソース制限に使用する
+- 補助的にどこでも使うモジュール
+- pam_deny.so 
+- pam_stack.so 
+- pam_warn.so
