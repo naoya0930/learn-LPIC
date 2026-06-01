@@ -286,4 +286,100 @@ DocumentRoot "/var/www/site_main"
 </VirtualHost>
 ```
 
-2-25～
+### Nginxの主な機能
+- リバースプロキシが主な機能
+  - webにこだわらずにロードバランシングが可能
+- webサイトのホスティングも可能
+
+### CGI, FastCGI
+- Common Gateway Interface
+  - サーバとプログラムをやり取りするインタフェース
+  - リクエストに対してプログラムを起動して結果を戻す
+- FastCGI
+  - CGIの一部分を常駐させておくことで高速化したもの
+/etc/squid/squid.conf
+
+
+
+### Nginxブロック
+- Main
+- Event
+- Http
+- Server
+- Location
+
+```
+main {             # 1. 全体設定
+    events {       # 2. 接続設定
+    }
+    http {         # 3. HTTP共通設定
+        server {   # 4. 仮想サーバーA（例: example.com）
+            location / {        # 5. ルートパスの処理
+              root /var/www/html
+              index index.html
+            }
+            location /api/ {    # 5. 特定パスの処理
+            }
+        }
+        server {   # 4. 仮想サーバーB（例: another.com）
+        }
+    }
+}
+```
+
+### 2-30 squid ディレクティブ
+- cache_mem
+  - メモリ上に確保するキャッシュ容量
+- cache_dir
+  - キャッシュを格納するディレクトリなど
+- minimux_objct_sia
+  - キャッシュされる最大ファイル容量
+
+### 2-30 cache_dir 記法
+- cache_dir {storage_type} {dir} {最大ディスク容量MB} {第一階層のサブディレクトリ数} {第二階層のサブディレクトリ数}
+- storage_type
+  - ufs...基本形式。メインプロセスを直接使用
+  - aufs...非同期対応。メインスレッドを使わない
+- dir
+  - キャッシュを保存するディレクトリ
+
+### 2-34 認証を実施するacl
+- auth_param...認証の方法を定義する
+  - auth_param program ... 認証を実施するプログラムを呼ぶ
+  - auth_param realm ... Kerberos
+  - auth param basic ... basic認証
+  - auth param digest ... digenst認証
+- proxy_auth...auth_paramを通過に関する条件を指定する
+  - `acl user proxy_auth REQUIRED`
+
+# ファイル共有
+### 3-1 samba予約語
+- [global]
+- [homes]
+- [printers]
+
+### 3-1 共有名とpath
+- 共有名に対してアクセスを実行する。
+  - `\\server\AccountData`へのアクセス
+- pathがサーバのどこに繋がるのかを定義する
+  - 直下のディレクトリは/dataにつながる
+
+```
+[AccountData] 
+   path = /srv/samba/accounting/data 
+   read only = no
+
+```
+
+### 3-1 sambaのbrowsableと隠蔽記号の[sam$]
+- browsable = no
+  - 共有名を変えずにユーザを隠す
+- [sam$]
+  - こちらはwindowsの仕様を使っている
+  - パスの指定の際に\\server\sam$
+  - ドルがパスに入ってくる
+
+### 3-6 ファイル共有機能におけるユーザ管理
+- SID...windowsのユーザ識別ID
+- UID...Linuxのユーザ識別ID
+- 
