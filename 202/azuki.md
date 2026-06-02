@@ -380,6 +380,28 @@ main {             # 1. 全体設定
   - ドルがパスに入ってくる
 
 ### 3-6 ファイル共有機能におけるユーザ管理
-- SID...windowsのユーザ識別ID
-- UID...Linuxのユーザ識別ID
-- 
+- これはsecurity=userの話
+  - ユーザ名同士でマッチングを実施する
+  - ユーザ認証（ID,passのマッチ）はtdbファイルで実施
+    - ここの同期はunix password sync=yesを実行
+  - ファイル共有ソフトとして使う時に、uidを取得する
+    - この時に初めて/etc/passwdを参照する。
+
+- security = adsを使用する場合、以下でマッチングする
+  - SID...windowsのユーザ識別ID
+  - UID...Linuxのユーザ識別ID
+
+### 3-6 ファイル共有機能で例外的にユーザ名をマッピングする
+- 管理者(adminとroot)などの名称の変換を実施する
+- `usernamap = /file`
+- このfileには、`Liniuxユーザ名 = クライアントユーザ名のリスト`で記載する
+  - `root = Administrator `など
+
+### 3-7 vetoによる隠蔽
+- smb.confで、`veto files = `で指定する
+- ディレクトリ、ファイル共通で隠蔽する。アクセスもできない
+- スラッシュで複数を指定できる
+- `veto files = /file/dir`
+
+
+writable

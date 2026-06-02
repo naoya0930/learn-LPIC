@@ -745,3 +745,58 @@ smtpd_banner = $myhostname ESMTP
 - pam_deny.so 
 - pam_stack.so 
 - pam_warn.so
+
+### smb.conf [printers]と[print$]
+- プリンタをつかうのであれば、両方使う
+- printers
+  - sambaサーバに接続されたプリンターを使用する
+  - Linux側でクライアントにプリンタの情報を開示する
+- print$
+  - プリンタドライバの配布
+  - これを設定しないと、ネットからドライバを落としてくる必要がある
+
+
+```
+
+[printers]
+    comment = All Printers
+    path = /var/spool/samba
+    browseable = no
+    guest ok = yes
+    writable = no
+    printable = yes
+
+[print$]
+    comment = Printer Drivers
+    path = /var/lib/samba/printers
+    browseable = yes
+    guest ok = yes
+    read only = yes
+
+  ```
+
+### 3-13 winbindのコンポーネント
+- Sambaの認証をADに委託するもの
+- Sambaで設定したユーザをADのユーザとして利用できるものではない
+- /etc/nsswitch.confに追記することで利用可能
+  - `passwd: files winbind`
+  - `group: files winbind`
+  - 利用には、sssライブラリも必要
+    - `libnss_winbind.so`
+- 専用のPAMも必要
+  - `pam_winbind.so`
+
+### 3-13 winbind vs sssd
+- sssd
+  - 複数のLinuxユーザ情報をまとめる
+    - windowsはAD、LinuxはOpenLDAP、パートナーはローカルファイルなど
+  - 認証プロセスにおいてwinbind競合する
+  - sssdはRedhat公式が開発
+  - Sambaと互換があるわけではない
+  - OpenLDAPなどの文脈で利用する
+  - こちらはADやDCを持たず、完全にwindowsログインプロセスと互換しない
+  - あくまで認証としてADをLDAP、Kerberosで利用するだけ。
+    - windows端末のログインプロセスの機能ではない
+    - Linuxサーバ側をADにメンバとして追加する
+
+### 
