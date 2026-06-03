@@ -470,7 +470,7 @@ main {             # 1. 全体設定
   - DNS形式で記載する
 
 ### nfsd操作コマンド
-- exportfs .../etc/exportsを更新する
+- `exportfs` .../etc/exportsを更新する
   - exportfs -a
     - /etc/exports全てをエクスポート
   - exportfs -u [-o option] client:dir
@@ -492,5 +492,139 @@ main {             # 1. 全体設定
 - サーバで実行すれば、接続があるクライアントを表示する
 - クライアントで実行すれば、マウント可能なサーバが見える
 - `showmount [NFSサーバ]`
-  - `showmount -t`
+  - サーバの指定として、IPv6、ホスト名、FQDNが使用可能
+  - `showmount -t`...
+    - サーバがエクスポートしているディレクトリとクライアントを戻す
+  - `showmount -a`...
+    - /var/libs/nfs/rmtabの内容を返す
+  
+### 3-26 NFSの主要なデーモン
+- NFS v3
+  - rpc.nfsd
+  - rpc.mountd...マウントサービスを提供
+  - rpc.statd...NFSサーバの状態をモニタ
 
+- NFS v4
+  - rpc.nfsd
+  - rpc.idmapd...ユーザ名で一致させる
+    - v3までは、uid/gidの完全一致が必要だった。
+
+
+# ネットワーククライアント管理
+
+### 4-2 dhcpd.conf
+```
+
+# グローバル設定（必須のネットワーク情報）
+option domain-name-servers 8.8.8.8;
+default-lease-time 86400;
+authoritative;
+
+# サブネット設定（IPの配布範囲とルーターの指定）
+subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.100 192.168.1.200;
+  option routers 192.168.1.1;
+}
+```
+
+### 4-2 dhcp.conf IPの指定方法
+- `subnet [address] netmask [subnet_mask]{}`
+  - このLANについてのIP、自身が所属している必要がある
+  - この配下で割り当て対象を指定する
+- `{}`の中
+  - range {from} {to}...DHCPクライアントに割り当て。
+    - 単一の場合は、toはなくてもいい
+  - range dynamic-bootp...bootpにも割り当て
+
+#### bootpって何？
+- bootp (Bootstrap Protocol)
+  - リース期間の概念が無い
+  - ディスクレス環境に対してIPを割り当てる
+    - プリンター、制御端末、旧式のPXEブートなど
+  - mac addressに対して割り当てる
+  - DHCPが永久に割り当てるため、IPが枯渇する
+
+#### 固定IPを割り当てる
+- ここで割り当てるアドレスは、DHCPでrange指定しているIPから外すことが推奨
+  - 自動割り当て側で突合する可能性がある。
+```
+# 例：特定のサーバーやプリンターに固定IPを割り当てる場合
+host my-target-host {
+  hardware ethernet 00:11:22:33:44:55; # 対象機器のMACアドレス
+  fixed-address 192.168.1.50;          # 常に割り当てたいIPアドレス
+}
+```
+
+
+### DHCPが伝達するもの
+- ドメイン名
+  - option domain-name
+- デフォルトゲートウェイのIP
+  - option router
+- サブネットマスク
+  - option subnet-mask
+- DNSサーバ
+  - option domain-name-server
+- LANのドメイン名
+  - option domain-name
+- NISサーバ名
+  - option nis-domain
+  - option nis-ip
+
+#### ドメインネームって何?
+- LANにおける有効な識別子
+- 端末は[ホスト名].[ドメイン名]で識別される。
+- このドメインを
+
+#### FQDNを見る
+- ispを通している場合、どんな名前で入っているかわからん
+- インターネットから見た場合
+  - webサイトから見る
+  - コマンドで見る
+    - `curl inet-ip.info`これで自身の外部IPが戻る
+    - 逆引きすればFQDNが判明`dig -x XXX.XXX`
+
+#### dhcp割り当てロジック
+- 複数のpoolが存在する場合、`pool{range XXX;deny XXX}`など
+  - 上の記述から順番に評価していく。
+  - 割り当て不可(割り当てが一杯になった場合)は下層の判断に入ったりする
+
+### 4-9 ipv6
+- 手法が2つある
+- SAALC...自動割り当て
+  - ルータが64bit生成して、ホストがMACアドレスから64bit生成する
+  - 実態は、radvdサービスを実行している
+  - RA(Router Advertisement)とも呼ばれる
+  - ルータ側(もしくはradvd実行Linux機)は割り当てを記録しない
+    - ステートレスと呼んだりする
+- DHCPv6
+  - DHCPで管理する
+  - ISC DHCPが代表的なIPv6対応DHCP
+  - DHCP側でどのマシンにどのIPを割り当てたか記憶している
+    - ステートフルと呼んだりする
+
+### 4-10 IPv6でのdhcp.confの記法
+- 基本は同じ
+- `subnet`や`range`に対して、6をつける
+- `subnet6`,`range6`
+- MACアドレスだけでなく、DUIDという値が使用できる
+
+####  DUID
+- クライアントOS等が生成して使っている自己識別子
+  - どれをつかわなければならないという制約はない
+- DUID-LLT
+  - Link-Local address plus time
+  - 生成した時刻+MACアドレス
+- DUID-EN
+  - Enterprise-Number
+  - 製造番号で使用。ルータとかの機器はこれを使用することが多い
+- DUID-LL
+  - Link-Local address
+  - MACアドレスそのもの
+
+
+## LDAP
+### DNの順序性
+
+
+4-13〜
