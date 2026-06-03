@@ -456,4 +456,41 @@ main {             # 1. 全体設定
     - windows端末のログインプロセスの機能ではない
     - Linuxサーバ側をADにメンバとして追加する
 
-### 
+### smb.confの組織
+- netbios name...sambaサーバ自身の名前
+  - なければLinuxのユーザ名が使用される
+  - ファイル共有ではこの名前が使用される
+  - OSとしての名前ではないため、ここを変えると面倒
+- workgroup...サーバが所属する組織
+  - Netbiosではメインで使用されていた
+  - 短いドメイン名
+  - 管理者がいないチームのようなもの
+  - LANが超えられないアレ
+- realm...Kerberos認証におけるユーザの認証範囲
+  - DNS形式で記載する
+
+### nfsd操作コマンド
+- exportfs .../etc/exportsを更新する
+  - exportfs -a
+    - /etc/exports全てをエクスポート
+  - exportfs -u [-o option] client:dir
+    - 指定したものをアンエクスポート
+  - exportfs -r
+    - /etc/exportsの設定を再ロード
+  - exportfs -v
+    - 詳細情報を表示
+
+### 3-20 nfsをマウントする
+- ファイルシステムに依存しない
+- コマンドからマウントする
+  - `mount -t nfs 192.168.1.50:/sec/nfs/share /mnt/nfs`
+- fstabに記載する
+  - [デバイス・共有名] [マウント先] [ファイルシステム] [オプション] [dump] [pass]
+  - `192.168.1.50:/srv/nfs/share /mnt/nfs nfs defaults,soft,nofail 0 0`
+
+### 3-22 利用可能なNFS共有を表示する
+- サーバで実行すれば、接続があるクライアントを表示する
+- クライアントで実行すれば、マウント可能なサーバが見える
+- `showmount [NFSサーバ]`
+  - `showmount -t`
+
