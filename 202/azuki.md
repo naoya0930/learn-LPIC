@@ -625,6 +625,49 @@ host my-target-host {
 
 ## LDAP
 ### DNの順序性
+- Distinguished Name
+- 右に行くにつれて大きな領域を指すように記述する
+- 親となるエントリが存在していない場合、子となる構造は作成できない
+- DITの記法で決まっている
+- `dn:uid=sample,ou=engineering,dc=example,dc=com`
+  
+### LDIF
+- LDAP Data Interchange Format
+- データの変換形式。.ldifファイルはこの形式
+- LDIFの中でDN形式が使われることもある
+- `dn: uid=XXX,ou=DDD`
+- `changetype: add`
+- などなど
+- 記法
+  - エントリは改行で区分けする
+  - 属性と値
+    - 「:」key-valueの関係
+    - 「::」base64 による記法
+    - 「:<」外部ファイル参照
+    - 「sample;sample2:value」オプションを指定した属性
 
+### slapd主要なコマンド
+- サーバ上から操作を実行する。ldapを経由しない
+  - slappasswd
+  - slapcat
+  - slapadd
+  - slaptest
+- ldapを使用して問い合わせる
+  - ldapsearch
+  - ldapadd
+  - ldapmodify
+  - ldapdelete
+  
 
-4-13〜
+### 4-16 slapd.conf継承と依存性
+- slapd.confは上から順番に読み込む性質がある
+- 一部のスキーマには依存性がある
+  - 上位(SUP)が読み込まれていないとエラーになる
+- `core.schema`は最上位にあることが多い
+- `inetorgperson.schema`はcoreに依存性がある
+
+### 4-20 OID
+- Object identifier
+- オブジェクトの定義を決める
+
+### 4-12 ldap.confログレベル
