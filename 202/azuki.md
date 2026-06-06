@@ -670,4 +670,4 @@ host my-target-host {
 - Object identifier
 - オブジェクトの定義を決める
 
-### 4-12 ldap.confログレベル
+### 4-12 ldap.confログ管理
