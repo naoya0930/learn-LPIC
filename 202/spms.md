@@ -567,6 +567,7 @@ smtpd_banner = $myhostname ESMTP
     - 具体的なメールの配置先を記載する
 
 #### dovecot認証メカニズム
+- `mechanism=`もしくは`auth_mechanism= `で設定する
 - IMAP,POP3での使用
 - 旧版のIMAP,POP3には脆弱な認証しか定義されていなかった
 - SASL(Simple Authentication and Security Layer)によっていくつかの認証を定義
@@ -587,7 +588,7 @@ smtpd_banner = $myhostname ESMTP
 - stop ...処理を停止する
 - vacation
 
-### コマンドエイリアスの設定を最新版にする
+### メールエイリアスの設定を最新版にする
 - newaliases
 
 

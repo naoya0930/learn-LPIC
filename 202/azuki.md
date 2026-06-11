@@ -670,4 +670,389 @@ host my-target-host {
 - Object identifier
 - オブジェクトの定義を決める
 
-### 4-12 ldap.confログ管理
+### 4-12 slapd.confログ管理
+- `loglevel` ... ログに出す情報量を定義。数値で管理する
+- `logfile` ... syslog(OS経由)でないログの出力先の定義
+
+### slapd.conf主要なディレクトリ
+- /etc/openldap/、もしくは/etc/ldap/配下にだいたい存在
+  - slapd.d/
+    - LDIF形式の設定ファイル
+  - schema/
+    - スキーマファイル
+    - 利用可能なすべてのカタログがここに記載されている
+
+### データベースの実態ディレクトリ
+- /var/lb/ldap/配下に存在
+  - *.mdb等の形式で存在
+- 設定ファイルとは別の場所に保存されている
+
+### suffix,rootdnに関して
+- suffix...そのLDAPサーバがどのドメインツリーを管理するか定義する
+- RootDN ... 最も強いユーザのDN識別子名
+- suffixの数だけ、RootDNが存在する
+- 近年の設定ファイルをツリー構造で記載する(cn=config)形式もある
+  - それぞれ、olcSuffix,olcRootDNというパラメータで管理
+
+
+### OpenLDAPデータベースバックエンド
+- データベースへの保存、処理を実行するエンジン
+  - bdb
+  - config
+  - dnssrv
+  - hdb
+  - ldap
+  - ldif
+  - mdb
+  - meta
+  - monitor
+  - null
+  - passwd
+  - perl
+  - relay
+  - shell
+  - sql
+
+### 4-25 pamの優先順位
+- /etc/pam.conf, /etc/pam.d/がある場合
+  - /etc/pam.confが無視される
+
+### PAM基本動作
+- 認証を必要とするライブラリのインストール
+- ここで、/etc/pam.d/配下に設定ファイルが記載される
+  - auth,account,password,sessionとか書かれたあれ
+- 呼び出し時に以下から該当の.soファイルを実行
+  - /usr/lib/security/配下に存在
+
+### PAMモジュール
+- pam_unix.so
+- pam_ldap.so
+- pam_rootok.so...ルートアクセスを許可
+- pam_securetty.so../etc/securettyファイルのデバイスからアクセスを許可
+- pam.nologin.so
+- pam_wheel.so
+- pam_cracklib.so...パスワードの安全性検証
+- pam_limits.so
+- pam_listfile.so
+- pam_permit.so
+- pam_deny.so
+- pam_access.so...ログインユーザの制御
+  - ユーザごとのアクセス可能IPの制限
+- pam_env.so...環境変数の設定と削除
+
+
+### pam.d/ファイルのタイプ
+- auth ... ユーザ認証
+- account ...アカウントのチェック
+- password ... パスワードの（再）設定
+- sesion ... 認証後の処理。
+
+
+### 制御フラッグ
+- required ...失敗しても全てを実行する。
+- requisite ... 失敗すると即時失敗と扱う
+- sufficient... 以前のrequiredと本節が成功した場合、全体で成功とする
+  - 失敗した場合は、次の条件を実行する。全体の成否には影響なし
+
+### pam.d/配下にファイルが存在しない場合
+- /etc/pam.d/otherファイルが使用される
+
+
+# メール
+### postfix設定ファイル
+- /etc/postfix/main.cf
+  - MTAとしての挙動の設定
+- /etc/postfix/master.cf
+  - postfixデーモンの挙動を設定
+
+### main.cfの設定
+- myhostname
+- mudomain
+- mynetwork
+- relay_domains
+  - 外部で受信して内部にメールを転送するドメイン
+  - 特定のドメインを特別に受信したい場合に設定
+- relayhost
+  - 内部で受信した外部あての転送ドメイン
+  - 信頼性の高い中継サーバへの転送依頼
+- inet_interface
+- onet_protocols
+- mydestination
+- home_mailbox
+
+### エイリアスの設定
+- \etc\aliases
+
+- 他のユーザにメールを転送する設定
+  - `user1: user2, user3`
+- 外部のメールアドレスに飛ばす
+  - `user: user@admin.com`
+- メールに書き込む
+  - `user: /var/log/archive.log`
+- メールを標準入力としてプログラムを実行する
+  - `user: "| /home/work/sample.sh"`
+- 他のファイルを読み込む
+  - `user: :include:/home/work/maillist`
+
+### aliasesの更新を実行する
+- postalias
+- newaliases
+  - ここエーリアスなので超注意！
+  - /etc/aliasesを更新する
+
+### RBL拒否リスト
+- real time black hole listの略
+- IPのブラックリスト
+- DNS経由で問い合わせを実施
+- これから受信しようとしているIPの安全性を検証
+- Aレコードだったり、TXTレコードで拒否リストが管理されている
+
+
+### 5-15 postfixのスプールのメールの操作
+- 閲覧
+  - postqueue -p
+  - mailq
+- 強制送信
+  - postqueue -f
+  - postfux flush
+- キュー中のメールを削除
+  - postsuper -d {id}
+  - postsuper -d ALL
+
+### 5-16 メール記述時の基礎構文
+- 送信時
+  - EHLO 送信元ホスト
+  - MAIL FROM 送信元アドレス
+  - RCPT TO 送信先アドレス
+  - DATA
+  - 以降、本文を記入する
+
+- 普通のFROM, TOはどこ行った？
+  - これは受信者が読み込む内容
+  - 送信時にはBCCやメールリストの関係から、これを直接書かない
+
+### 5-18 dovecot.confでの認証
+- mechanism,auth_mechanismで指定する
+- メール受信時の認証
+- SASLによる拡張認証
+  - plain
+  - login
+  - cram-md5
+  - digest-md5
+  - scram-sha-1
+  - apop
+
+### doveadmコマンド
+- doveadm reload ...設定ファイルの再読み込み
+- doveadm stop ... デーモンを停止
+- doveadm mailbox ... ユーザのメールボックスの管理
+- doveadm who ... Dovecotに接続しているユーザ一覧を表示
+
+### 5-22 Sieve 主要なアクション
+- fileinfo ... 指定したメールボックスへ
+- keep ... デフォルトのメールボックスへ
+- discard ... 破棄する
+- reject ... 拒否する
+- redirect ... 指定したメールアドレスに回送
+- stop ... 処理の停止
+- vacation ... 自動返信
+
+- Sieveサンプルファイル
+
+```
+# =====================================================================
+# 必要な拡張機能（機能モジュール）の読み込み
+# =====================================================================
+require ["fileinto", "reject", "copy", "vacation"];
+
+# =====================================================================
+# ルール1: スパムメールの自動破棄 (discard)
+# =====================================================================
+# メールのヘッダに「X-Spam-Flag: YES」がある場合は、
+# ユーザーの目に触れさせず、完全に消去します。
+if header :contains "X-Spam-Flag" "YES" {
+    discard;
+    stop; # ここで処理を終了し、これ以降のルールは評価しない
+}
+
+# =====================================================================
+# ルール2: 重大なエラーや不正アクセス通知の受信拒否 (reject)
+# =====================================================================
+# 特定のブラックリストに載っている送信元（例: bad-robot@example.com）からの
+# メールの受信を拒否し、送信元にエラーメッセージを突き返します。
+if address :is "from" "bad-robot@example.com" {
+    reject "Your email was rejected by the system administrator due to security policies.";
+    stop;
+}
+
+# =====================================================================
+# ルール3: 特定の重要な報告書を別のアドレスへ転送 (redirect)
+# =====================================================================
+# 件名（Subject）に「月次報告書」が含まれている場合、
+# 自分の手元に残しつつ、上司やアーカイブ用のアドレスへ自動転送します。
+if header :contains "Subject" "月次報告書" {
+    # 自分のメールボックスに通常通り保存する (keep)
+    keep;
+    # 指定した別のアドレスへメールを転送する (redirect)
+    redirect "manager@example.com";
+    stop;
+}
+
+# =====================================================================
+# ルール4: 請求書メールの専用フォルダへの自動振り分け (fileinto)
+# =====================================================================
+# 件名に「請求書」または「Invoice」が含まれている場合、
+# 受信トレイではなく「Invoices」というフォルダへ直接移動します。
+if header :contains "Subject" ["請求書", "Invoice"] {
+    fileinto "Invoices";
+    stop;
+}
+
+# =====================================================================
+# ルール5: 休暇中の自動返信設定 (vacation)
+# =====================================================================
+# 上記のどのルールにも該当しなかった通常のメールに対して、
+# 自分が不在（休暇中）であることを送信元へ自動で返信します。
+vacation
+    :days 7
+    :subject "【自動応答】ただいま休暇をいただいております"
+    :addresses ["me@example.com"]
+    "お送りいただきありがとうございます。
+    ただいま長期休暇をいただいており、メールの確認ができません。
+    急を要する用件につきましては、緊急連絡先（090-xxxx-xxxx）までご連絡ください。
+    よろしくお願いいたします。";
+
+# 最後に、自動返信を行った上で、届いたメール自体は自分の受信トレイに通常通り保存します。
+keep;
+```
+
+# システムセキュリティ
+### sysctlの効果
+- カーネル設定の変更
+- /proc/sys/配下に変更を入れる
+- オプション
+  - `sysctl -a`
+    - 一覧表示
+  - `sysctl {key}`
+    - キーで検索
+  - `sysctl -w {param} = {value}`
+    - 値の変更
+  - `sysctl -p `
+    - `/etc/sysctl.conf`を読み込む
+
+### /etc/proc/の主要なファイル
+- /proc/sys/fs ... ファイルシステム
+- /proc/sys/kernel ... カーネルパラメータ
+- /proc/sys/vm ... 仮想記憶のパラメータ
+- /proc/sys/net ... ネットワーク関連
+- /proc/sys/net/ipv4/ip_forward ... ip転送
+  - 1で有効、0で無効
+- /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+  - ICMPのブロードキャストに対する応答。
+  - 1で無視機能をオン、0で無視機能をオフ
+- /proc/sys/net/ipv4/tcp_syncookies
+  - SYN FLOODの回避方法
+    - SYNリクエストを大量に送り付けてメモリ消費を狙う仕組み
+  - 1で有効、0で無効化
+
+### iptables主要なコマンド
+- iptables -A/-D/-P [chain] [rule]
+  - chainにルールを追加/削除/変更
+- iptalbes -L/-F/-N/-X [chain]
+  - chainを表示/すべて削除/作成/削除
+
+### iptables -A/-D/-Pに続くルールの記法
+- -s/-d/-sport/-dport ...送信元/送信先/送信元ポート/送信先ポート
+- -j [target]
+  - ACCEPT,REJECT,DROP,DNAT,SNAT,MASQUAEADEW,LOG,他、ユーザ定義ターゲット
+
+### 宛先ごとのテーブルの行先
+- 外部から受信してその場で処理する
+  - 1. natテーブル、PREROUTINGチェイン
+  - 2. filterテーブル、INPUTチェイン
+- 外部から受信して転送する
+  - 1. natテーブル、PREROUTINGチェイン
+  - 2. filterテーブル、FORWARDチェイン
+  - 3. natテーブル、POSTROUTINGチェイン
+- ローカルから外部に送る
+  - 1. natテーブル、OUTPUTチェイン
+  - 2. filterテーブル OUTPUTチェイン
+  - 3. natテーブル、POSTROUTINGチェイン
+
+
+### ipv6におけるgw指定
+- route add -A inet default gw XXXXX dev ethX
+  - 上記において、ethコネクタを指定しなければならない場合がある。
+- リンクローカルアドレス(fe80::)を使用する場合
+  - リンクにおいて有効な範囲が決まっている為、指定が必須
+  - 間違えると、飛ばなくなる
+- グローバルアドレス(2001::)の場合
+  - 世界的に一意なので、間違えても問題が無い
+  - なんにせよルータに到達できる
+
+### ipv6における送信先指定
+- route add -A inet6 2001:xxx via xxxx
+- リンクローカルアドレスは原則として利用できない
+  - 異なるNWへ飛ばすためのroute addを記載するはずだが、スコープ外
+
+
+### 匿名ftpクライアントの操作権限
+- 読み込み権限を渡さないのが一般的
+  - `-wx --- ---`
+  - 一覧を読ませないためらしい・・・
+
+### 6-14 vsftpd.confの設定
+- 設定ファイルが超簡単
+- `chroot_local_user=YES`でホームディレクトリ割り当て
+- `anonymous_enable=YES`で匿名ユーザアクセス有効化
+- `anon_root= \var\ftp\pub` で匿名ユーザのルートを決める
+
+
+
+### 6-20 OpenSSH ログイン時のパスフレーズ省略
+- `~/.shosts`ファイル
+  - ホスト名とIPを書くと、そこからの接続に認証を入れなくなる
+
+### 6-23 sshポートフォワーディングの設定
+- -L ローカルからリモートへポート転送を実行
+- -R リモートからローカルへ転送を実行
+
+### sshでX11を許可する設定
+- `X11Fowarding yes`
+- クライアント
+  - `ssh -X sample@server-remote`
+
+### 6-27 fail2ban vs tcp wrapper
+- fail2ban
+  - 基本はL4で動作
+  - ログを観察して動的なブロックが可能
+  - iptableレベルでパケットを落とすのでアプリに到達しない
+- tcp wrapper
+  - L7で動作
+  - tcp自体は確立している状態で判断を実施する
+  - /etc/hosts.allow、/etc/hosts.denyで定義
+  - 旧式
+
+
+### 6-33 Open VPN
+- ポートフォワーディングではなく、仮想敵にeth(tapX)を作ってそこで通信する
+- クライアント側、サーバ側で専用のtap同士で通信
+- 外部に出ていくときにはサーバが送信元IPを変更して通信
+  - 送信元は内部IPで、戻ってこなくなるため。
+- デフォルトポート 1194
+
+### 6-34 OpenVPNクライアント同士の通信
+- 通常は許可されない
+  - サーバ設定ファイル`server.conf`で`client-to-client`の追記が必要
+- 内部的には、サーバ側のeth(tap)を共有している
+- L2/L3でクライアント同士を接続するか設定で変更できる
+
+### セキュリティ組織
+- CERT
+  - Computer Emergency Response Team
+- CSIRT
+  - Computer Secutrity Incident Response Team
+- CIAC
+  - Computer Incident Advisory Capability
+- Bugtraq
+  - セキュリティに関するメーリングリスト
